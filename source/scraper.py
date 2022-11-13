@@ -1,5 +1,6 @@
-from bs4 import BeautifulSoup
 import requests
+from bs4 import BeautifulSoup
+import pandas as pd
 
 
 class Scraper:
@@ -57,6 +58,41 @@ class Scraper:
         self.next_url = self.url[:index + len(self.index_parameter) + 1] + str(self.current_index)
         self.next_url += self.url[index + len(self.index_parameter) + 2:]
 
+    def __scrape_page(self, user_agent=None):
+        # Inicializamos un dataframe
+        df = pd.DataFrame()
+        for k in self.linksToExplore:
+            # Creamos un diccionario para cada una de las páginas.
+            dic_ = dict()
+            subpage_ = requests.get(k, headers={"User-Agent": user_agent})
+            subsoup_ = BeautifulSoup(subpage_.content)
+
+            dic_["Título"] = [subsoup_.find('h1', class_='ev-exposee-title ev-exposee-headline').text]
+            dic_["Descripción"] = [subsoup_.find('p', class_='ev-exposee-text').text]
+            dic_["Localización"] = [subsoup_.find('div', class_='ev-exposee-content ev-exposee-subtitle').text]
+            fact_titles = subsoup_.find_all('div', class_='ev-key-fact-title')
+            fact_values = subsoup_.find_all('div', class_='ev-key-fact-value')
+            detail_facts = subsoup_.find_all('li', class_='ev-exposee-detail-fact')
+
+            for i in range(0, len(fact_titles)):
+                dic_[fact_titles[i].text] = [fact_values[i].text]
+
+            for i in detail_facts:
+                conq = []
+                if i.find('label') is not None:
+                    if len(i.find_all('span')) > 1:
+                        for j in range(0, len(i.find_all('span'))):
+                            conq.append(i.find_all('span')[j].text)
+                        dic_[i.find('label').text] = ['/'.join(conq)]
+                    else:
+                        dic_[i.find('label').text] = [i.find('span').text]
+
+            if df.empty:
+                df = pd.DataFrame(dic_)
+            else:
+                df_aux = pd.DataFrame(dic_)
+                df = pd.concat([df, df_aux], ignore_index=True)
+
     def scrape(self):
         while self.explore:
             self.__get_page()
@@ -64,7 +100,7 @@ class Scraper:
             self.__get_links()
             self.__filter_links()
             self.__get_next_link()
-
+        self.__scrape_page()
         #  TODO: Hasta aquí he recorrido todas las paginas guardando los links importantes en self.linksToExplore
         # Lo que deberíamos hacer ahora es:
         # 1. Recorrer todos los links guardados e buscar en cada uno la información más relevante
