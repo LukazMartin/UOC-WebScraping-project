@@ -19,8 +19,8 @@ class Scraper:
         self.next_url = None
         self.explore = True
         self.csv = csv.writer(open(BASE_DIR / 'dataset/engelvoelkers_houses_bcn.csv', 'w'))
-        self.csv.writerow(['title', 'location', 'location_status', 'status', 'year', 'area', 'bathrooms', 'bedrooms',
-                           'heating_type', 'energy_class', 'price'])
+        self.csv.writerow(['id', 'title', 'location', 'location_status', 'status', 'year', 'area', 'bathrooms',
+                           'bedrooms', 'heating_type', 'energy_class', 'price'])
 
     def __get_page(self, user_agent=None):
 
@@ -96,10 +96,12 @@ class Scraper:
                 except ValueError:
                     location = None
 
-                year, status, location_status, energy_class, heating_type = None, None, None, None, None
+                id_, year, status, location_status, energy_class, heating_type = None, None, None, None, None, None
                 for detail in detail_facts:
-                    if 'Año de construcción' in detail:
-                        year = detail[detail.index('Año de construcción')+20:].replace(" ", "")
+                    if 'E&V ID' in detail:
+                        id_ = detail[detail.index('E&V ID')+7:]
+                    elif 'Año de construcción' in detail:
+                        year = detail[detail.index('Año de construcción')+20:]
                     elif 'Estado' in detail:
                         status = detail[detail.index('Estado')+7:]
                     elif 'Ubicación' in detail:
@@ -110,15 +112,16 @@ class Scraper:
                         heating_type = detail[detail.index('Tipo de calefacción')+21:]
 
                 # Now we have extracted the values we want
-                self.__preprocess_and_safe(title, location, bedrooms, bathrooms, area, price, year, status, location_status, energy_class, heating_type)
+                self.__preprocess_and_safe(id_, title, location, bedrooms, bathrooms, area, price, year, status, location_status, energy_class, heating_type)
 
             except:
                 pass
 
-    def __preprocess_and_safe(self, title, location, bedrooms, bathrooms, area, price, year, status, location_status,
+    def __preprocess_and_safe(self, id_, title, location, bedrooms, bathrooms, area, price, year, status, location_status,
                               energy_class, heating_type):
 
         # We remove the commas that can appear
+        id_ = id_.replace(",", " ").replace(" ", "") if id_ is not None else None
         title = title[1:].replace(",", " ") if title is not None else None
         location = location.replace(",", " ") if location is not None else None
         location_status = location_status.replace(",", " ").replace(" ", "") if location_status is not None else None
@@ -132,7 +135,7 @@ class Scraper:
         price = price.replace(",", "").replace(" ", "") if price is not None else None
 
         # And safe it in the csv
-        self.csv.writerow([title, location, location_status, status, year, area, bathrooms, bedrooms, heating_type,
+        self.csv.writerow([id_, title, location, location_status, status, year, area, bathrooms, bedrooms, heating_type,
                            energy_class, price])
 
     def scrape(self):
@@ -149,15 +152,9 @@ class Scraper:
         self.__scrape_sub_pages()
 
 
-
 if __name__ == '__main__':
 
+    # This script scrapes 1250 links and takes about 10 minutes
+    # The page is from engel&volkers a real state company. And the information scraped is related to house selling.
     scrapper = Scraper("https://www.engelvoelkers.com/es/search/?q=&startIndex=0&businessArea=residential&sortOrder=DESC&sortField=newestProfileCreationTimestamp&pageSize=18&facets=bsnssr%3Aresidential%3Bcntry%3Aspain%3Bobjcttyp%3Acondo%3Brgn%3Abarcelona%3Btyp%3Abuy%3B", 18)
     scrapper.scrape()
-
-
-
-# Paginas para documentar en el pdf:
-# page = get_page("https://www.engelvoelkers.com/es-es/propiedades/comprar-vivienda/barcelona/")  # review robots.txt -> This is the main page
-# https://www.engelvoelkers.com/dp-sitemap/sitemap_index.xml
-# https://www.engelvoelkers.com/sitemap_index.xml
