@@ -4,7 +4,7 @@ Práctica 1: ¿Cómo podemos capturar los datos de la web?
 
 Asignatura: Tipología y ciclo de vida de los datos
 
-Autores: _**Lukaz Martin Doehne** & _**Pablo Vadillo Berganza**
+Autores: **Lukaz Martin Doehne** & **Pablo Vadillo Berganza**
 
 Profesora: Laia Subirats Maté
 
@@ -62,6 +62,8 @@ El dataset consta de 1250 filas que representan cada casa en venta. El formato e
 · Añadir un mensaje (terminal). git commit -m "Aqui va el mensaje entre comillas"
 
 · Subir al repositorio (terminal). git push origin nombre-de-la-rama
+
+
 
 
 El script a ejecutar se encuentra en source/scraper.py
