@@ -1,13 +1,15 @@
 import requests
 from bs4 import BeautifulSoup
 from pathlib import Path
+from random import randint
+from time import sleep
 import csv
 
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 
 
 class Scraper:
-    def __init__(self, url, pagination_index):
+    def __init__(self, url, pagination_index, user_agent=None):
         self.url = url
         self.pagination_index = pagination_index
         self.current_index = 0
@@ -18,20 +20,24 @@ class Scraper:
         self.linksToExplore = []
         self.next_url = None
         self.explore = True
+        self.user_agent = user_agent
         self.csv = csv.writer(open(BASE_DIR / 'dataset/engelvoelkers_houses_bcn.csv', 'w'))
         self.csv.writerow(['id', 'title', 'location', 'location_status', 'status', 'year', 'area', 'bathrooms',
                            'bedrooms', 'heating_type', 'energy_class', 'price'])
 
-    def __get_page(self, user_agent=None):
+    def __get_page(self, count=0):
 
         # Some pages don't work without headers. See robots.txt
         if not self.next_url:
-            page_ = requests.get(self.url, headers={"User-Agent": user_agent})
+            page_ = requests.get(self.url, headers={"User-Agent": self.user_agent})
         else:
             page_ = requests.get(self.next_url, headers={"User-Agent": user_agent})
 
         if not page_.ok:  # Only requests 2XX are valid
-            raise Exception(f"Could not get page {self.url}")
+            if count >= 5:
+                raise Exception(f"Could not get page {self.url}")
+            sleep(randint(1, 5))
+            self.__get_page(count+1)
 
         self.page = page_
 
@@ -64,12 +70,12 @@ class Scraper:
         self.next_url = self.url[:index + len(self.index_parameter) + 1] + str(self.current_index)
         self.next_url += self.url[index + len(self.index_parameter) + 2:]
 
-    def __scrape_sub_pages(self, user_agent=None):
+    def __scrape_sub_pages(self):
 
         for link in self.linksToExplore:
 
             try:
-                subpage_ = requests.get(link, headers={"User-Agent": user_agent})
+                subpage_ = requests.get(link, headers={"User-Agent": self.user_agent})
                 soup_ = BeautifulSoup(subpage_.content, features="html.parser")
 
                 title = soup_.find('h1', class_='ev-exposee-title ev-exposee-headline').text
@@ -156,5 +162,7 @@ if __name__ == '__main__':
 
     # This script scrapes 1250 links and takes about 10 minutes
     # The page is from engel&volkers a real state company. And the information scraped is related to house selling.
-    scrapper = Scraper("https://www.engelvoelkers.com/es/search/?q=&startIndex=0&businessArea=residential&sortOrder=DESC&sortField=newestProfileCreationTimestamp&pageSize=18&facets=bsnssr%3Aresidential%3Bcntry%3Aspain%3Bobjcttyp%3Acondo%3Brgn%3Abarcelona%3Btyp%3Abuy%3B", 18)
+    user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/5\
+    37.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36"
+    scrapper = Scraper("https://www.engelvoelkers.com/es/search/?q=&startIndex=0&businessArea=residential&sortOrder=DESC&sortField=newestProfileCreationTimestamp&pageSize=18&facets=bsnssr%3Aresidential%3Bcntry%3Aspain%3Bobjcttyp%3Acondo%3Brgn%3Abarcelona%3Btyp%3Abuy%3B", 18, user_agent)
     scrapper.scrape()
