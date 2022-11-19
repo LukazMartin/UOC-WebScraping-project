@@ -15,6 +15,10 @@ El objetivo de este proyecto es realizar WebScraping en una página web y guarda
 
 La página web objetivo es www.engelvoelkers.com y los datos guardados son sobre todas las casas que tienen en venta en barcelona.
 
+Zenodo link: https://zenodo.org/record/7337520#.Y3jKWOzMJ6p
+
+DOI: 10.5281/zenodo.7337520
+
 
 ## Dataset
 
