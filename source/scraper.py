@@ -31,7 +31,7 @@ class Scraper:
         if not self.next_url:
             page_ = requests.get(self.url, headers={"User-Agent": self.user_agent})
         else:
-            page_ = requests.get(self.next_url, headers={"User-Agent": user_agent})
+            page_ = requests.get(self.next_url, headers={"User-Agent": self.user_agent})
 
         if not page_.ok:  # Only requests 2XX are valid
             if count >= 5:
