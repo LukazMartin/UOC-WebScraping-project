@@ -19,7 +19,7 @@ Zenodo link: https://zenodo.org/record/7337520#.Y3jKWOzMJ6p
 
 DOI: 10.5281/zenodo.7337520
 
-El dataset generado se encuentra en la ruta dataset/engelvoelkers_houses_bcn.csv y el script para generarlo se encuentra en source/scraper.py
+El dataset generado se encuentra en la ruta **dataset/engelvoelkers_houses_bcn.csv** y el script para generarlo se encuentra en **source/scraper.py**
 
 
 ## Dataset
